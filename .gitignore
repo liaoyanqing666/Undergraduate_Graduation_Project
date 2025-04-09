@@ -1,0 +1,6 @@
+.idea/
+.vscode/
+.env
+__pycache__/
+dataset/
+model_para/
