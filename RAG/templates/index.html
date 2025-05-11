@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>多模态聊天机器人</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400&family=Merriweather:wght@700&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --primary:#5b8db8;
+      --primary-dark:#3c6e91;
+      --user-bg:#dcf8c6;
+      --bot-bg:#ececec;
+      --chat-bg:#eef3f6;
+    }
+    /* ---------- Reset & 基础 ---------- */
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{
+      font-family:'Roboto',sans-serif;
+      background:#f9f9f9;
+      display:flex;flex-direction:column;align-items:center;
+      color:#333;
+    }
+    /* ---------- 布局 ---------- */
+    .chat-container{
+      width:90%;max-width:1000px;
+      background:#fff;padding:24px 28px;margin-top:40px;
+      border-radius:10px;
+      box-shadow:0 6px 14px rgba(0,0,0,.08);
+    }
+    .chat-box{
+      height:500px;overflow-y:auto;
+      border:1px solid #ccc;border-radius:6px;
+      background:var(--chat-bg);
+      padding:12px 14px;margin-bottom:20px;
+    }
+
+    /* ---------- 消息气泡 ---------- */
+    .message{display:flex;margin:6px 0;}
+    .user{justify-content:flex-end;}
+    .robot{justify-content:flex-start;}
+
+    .message-content{
+      max-width:65%;
+      padding:8px 12px;border-radius:15px;
+      line-height:1.45;white-space:pre-wrap;word-break:break-word;
+    }
+    .user .message-content{
+      background:var(--user-bg);border-bottom-right-radius:0;
+    }
+    .robot .message-content{
+      background:var(--bot-bg);border-bottom-left-radius:0;
+    }
+    .message img{max-width:100%;border-radius:10px;margin-top:5px;}
+
+    /* 细调 Markdown 在气泡内的段落间距 */
+    .message-content p,
+    .message-content ul,
+    .message-content ol{margin:.4em 0;}
+
+    /* ---------- 输入区 ---------- */
+    .input-section{display:flex;flex-direction:column;gap:10px;}
+    textarea{
+      width:100%;max-width:100%;min-width:0;
+      padding:10px;border-radius:5px;border:1px solid #ccc;
+      font-size:16px;resize:vertical;
+    }
+    .controls{display:flex;justify-content:space-between;align-items:center;}
+    input[type="file"]{padding:5px;}
+    button{
+      padding:10px 22px;background:var(--primary);
+      color:#fff;border:none;border-radius:5px;cursor:pointer;
+    }
+    button:hover{background:var(--primary-dark);}
+
+    #preview p{margin:0 0 6px;}
+  </style>
+</head>
+<body>
+
+<div class="chat-container">
+  <div class="chat-box" id="chatBox"></div>
+
+  <div class="input-section">
+    <textarea id="userInput" rows="3" placeholder="请输入内容..."></textarea>
+
+    <div class="controls">
+      <input type="file" id="imageInput" accept="image/*">
+      <button id="sendBtn">发送</button>
+    </div>
+
+    <div id="preview"></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+<script>
+  let imageUrl=null,imagePath=null;
+
+  document.getElementById('imageInput').addEventListener('change',async function(){
+    const file=this.files[0];
+    if(!file) return;
+    const formData=new FormData();formData.append('file',file);
+    const res=await fetch('/upload',{method:'POST',body:formData});
+    const data=await res.json();
+    if(data.error){alert(data.error);return;}
+    imageUrl=data.url;imagePath=data.path;
+    document.getElementById('preview').innerHTML=
+      `<p>图片预览：</p><img src="${imageUrl}" style="max-width:200px;border:1px solid #ccc;border-radius:5px;">`;
+  });
+
+  document.getElementById('sendBtn').addEventListener('click',sendMessage);
+
+  function appendMessage(sender,html,isRaw){
+    const box=document.getElementById('chatBox');
+    const msg=document.createElement('div');msg.className=`message ${sender}`;
+    const cont=document.createElement('div');cont.className='message-content';
+    cont.innerHTML=isRaw?html:marked.parse(html);
+    msg.appendChild(cont);box.appendChild(msg);box.scrollTop=box.scrollHeight;
+  }
+
+  async function sendMessage(){
+    const input=document.getElementById('userInput');const txt=input.value.trim();
+    if(!txt&&!imagePath) return;
+
+    if(txt) appendMessage('user',txt);
+    if(imageUrl) appendMessage('user',`<img src="${imageUrl}" style="max-width:200px;">`,true);
+
+    input.value='';document.getElementById('preview').innerHTML='';
+
+    const es=new EventSourcePolyfill('/chat',{
+      headers:{'Content-Type':'application/json'},
+      payload:JSON.stringify({message:txt,path:imagePath})
+    });
+
+    appendMessage('robot','');
+    const last=document.querySelectorAll('.robot .message-content');
+    const container=last[last.length-1];
+    let buf='';
+    es.onmessage=e=>{buf+=e.data;container.innerHTML=marked.parse(buf);};
+    es.onerror=()=>es.close();
+
+    imageUrl=imagePath=null;
+  }
+
+  class EventSourcePolyfill{
+    constructor(url,opt){
+      this.url=url;this.payload=opt.payload;this.headers=opt.headers||{};
+      this.ctrl=new AbortController();this.onmessage=this.onerror=()=>{};
+      this._open();
+    }
+    async _open(){
+      try{
+        const res=await fetch(this.url,{method:'POST',headers:this.headers,
+          body:this.payload,signal:this.ctrl.signal});
+        const rd=res.body.getReader(),dc=new TextDecoder();let buf='';
+        while(true){
+          const {value,done}=await rd.read();if(done) break;
+          buf+=dc.decode(value,{stream:true});
+          let parts=buf.split('\n\n');buf=parts.pop();
+          parts.forEach(l=>l.startsWith('data: ')&&this.onmessage({data:l.slice(6)}));
+        }
+      }catch(e){this.onerror(e);}
+    }
+    close(){this.ctrl.abort();}
+  }
+</script>
+</body>
+</html>
