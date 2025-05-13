@@ -1,5 +1,1 @@
-```
-pip install python-dotenv
-pip install openai
-```
-
+本文件夹中只包含部分核心内容，数据清洗和数据预处理的代码暂未包含。
