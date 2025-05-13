@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Multimodal Chatbot</title>
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400&family=Merriweather:wght@700&display=swap" rel="stylesheet"/>
+
+  <!-- 外部样式 -->
+  <link rel="stylesheet" href="{{ url_for('assets', filename='style.css') }}">
+</head>
+<body>
+  <div class="chat-container">
+    <div class="chat-header">💬 Multimodal Chatbot</div>
+
+    <div class="chat-box" id="chatBox"></div>
+
+    <div class="composer">
+      <textarea id="userInput" placeholder="Enter your message..."></textarea>
+
+      <div class="controls">
+        <input type="file" id="imageInput" accept="image/*">
+        <button id="sendBtn">Send</button>
+      </div>
+
+      <div id="preview"></div>
+    </div>
+  </div>
+
+  <!-- Markdown parser -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+  <!-- 外部脚本 -->
+  <script src="{{ url_for('assets', filename='script.js') }}"></script>
+</body>
+</html>

@@ -7,7 +7,7 @@ from flask import (
 )
 from werkzeug.utils import secure_filename
 from dotenv import load_dotenv
-from llm_chat_api import get_client, encode_image_to_base64
+from API.llm_chat_api import get_client, encode_image_to_base64
 
 load_dotenv()
 
@@ -92,6 +92,12 @@ def chat():
 
     # Server-Sent Events
     return Response(generate(), mimetype='text/event-stream')
+
+
+@app.route('/assets/<path:filename>')
+def assets(filename):
+    # 让浏览器可以 GET /assets/style.css 或 script.js
+    return send_from_directory(app.template_folder, filename)
 
 
 # ---------- 访问上传图片 ----------

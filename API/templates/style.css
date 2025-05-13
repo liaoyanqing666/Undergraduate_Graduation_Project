@@ -1,0 +1,79 @@
+:root{
+  --primary:#5b8db8;
+  --primary-dark:#3c6e91;
+  --user-bg:#dcf8c6;
+  --bot-bg:#ececec;
+  --chat-bg:#eef3f6;
+  --radius:10px;
+}
+/* Reset */
+*{box-sizing:border-box;margin:0;padding:0;}
+body{
+  font-family:'Roboto',sans-serif;
+  background:#f9f9f9;color:#333;
+  display:flex;flex-direction:column;align-items:center;
+  min-height:100vh;
+}
+/* Container */
+.chat-container{
+  width:90%;max-width:1000px;
+  background:#fff;padding:28px 32px;margin-top:40px;
+  border-radius:var(--radius);
+  box-shadow:0 6px 14px rgba(0,0,0,.08);
+  display:flex;flex-direction:column;gap:20px;
+}
+.chat-header{
+  font-family:'Merriweather',serif;
+  font-size:32px;font-weight:bold;text-align:center;
+  color:var(--primary);
+}
+/* Chat area */
+.chat-box{
+  height:500px;
+  overflow-y:auto;
+  background:var(--chat-bg);
+  border:1px solid #ccc;border-radius:var(--radius);
+  padding:14px 16px;
+  display:flex;flex-direction:column;gap:8px;
+}
+.message{display:flex;}
+.user {justify-content:flex-end;}
+.robot{justify-content:flex-start;}
+.bubble{
+  max-width:70%;
+  padding:10px 14px;
+  border-radius:16px;
+  line-height:1.45;white-space:pre-wrap;word-break:break-word;
+  display:flex;flex-direction:column;gap:6px;
+}
+.user  .bubble{background:var(--user-bg);border-bottom-right-radius:0;}
+.robot .bubble{background:var(--bot-bg); border-bottom-left-radius:0;}
+.bubble p,.bubble ul,.bubble ol,.bubble pre,.bubble code{margin:.3em 0;}
+.bubble img{max-width:100%;border-radius:6px;}
+/* Composer */
+.composer{display:flex;flex-direction:column;gap:10px;}
+textarea{
+  width:100%;padding:10px 12px;font-size:16px;resize:vertical;
+  border:1px solid #ccc;border-radius:6px;min-height:80px;
+}
+.controls{
+  display:flex;justify-content:space-between;align-items:center;
+  flex-wrap:wrap;gap:10px;
+}
+input[type="file"]{font-size:14px;}
+button{
+  padding:10px 24px;cursor:pointer;
+  background:var(--primary);color:#fff;
+  border:none;border-radius:6px;
+  transition:background .3s;
+}
+button:hover{background:var(--primary-dark);}
+/* Preview */
+#preview img{max-width:200px;border:1px solid #ccc;border-radius:6px;}
+#preview p{margin-bottom:4px;}
+/* Mobile */
+@media(max-width:768px){
+  .chat-header{font-size:26px;}
+  .controls{flex-direction:column;align-items:stretch;}
+  button{width:100%;}
+}

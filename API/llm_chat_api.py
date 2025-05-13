@@ -113,6 +113,7 @@ def test_llm_api():
         ollama:     'deepseek-r1:1.5b-qwen-distill-fp16'/'qwen2.5:3b'
 
     """
+    content = '简短回答，什么是胆碱能性荨麻疹？'
     messages = [
         {
             "role": "system",
@@ -121,13 +122,14 @@ def test_llm_api():
         },
         {
             "role": "user",
-            "content": '你好',
+            "content": content,
             # Translation: "Hello"
         }
     ]
+    print("Question: ", content)
     client = get_client('aliyun')
     model = 'deepseek-r1'
-    address_chat_response(client, model, messages, stream=True, text_only=True)
+    address_chat_response(client, model, messages, stream=True, text_only=False)
 
 
 def encode_image_to_base64(path, max_size_kb=1024):
@@ -201,7 +203,7 @@ if __name__ == '__main__':
     print('\033[34mTest LLM API:\033[0m')
     test_llm_api()
 
-    print('\n\n')
-
-    print('\033[34mTest Multimodal LLM API\033[0m')
-    test_llm_api_with_image()
+    # print('\n\n')
+    #
+    # print('\033[34mTest Multimodal LLM API\033[0m')
+    # test_llm_api_with_image()
